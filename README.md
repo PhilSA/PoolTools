@@ -18,5 +18,5 @@ if (myPool.SpawnPoolable(out MyPoolable f))
 **Recycling to pool**
 
 ```C#
-.myPoolable.Pool.RecyclePoolable(myPoolable.IndexInPool);
+myPoolable.Pool.RecyclePoolable(myPoolable.IndexInPool);
 ```

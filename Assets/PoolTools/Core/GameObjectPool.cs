@@ -1,4 +1,4 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -46,7 +46,7 @@ namespace PoolTools
         {
             if (ResizeIfNeeded && _availableIndexesCount <= 0)
             {
-                ResizePool(Mathf.RoundToInt(_availableIndexes.Length * ResizeFactor));
+                ResizePool(Mathf.CeilToInt(_pool.Length * ResizeFactor));
             }
 
             if (_availableIndexesCount > 0)
@@ -63,8 +63,9 @@ namespace PoolTools
                 {
                     poolable.gameObject.SetActive(true);
                 }
-                poolable.OnSpawnFromPool();
+
                 poolable.IsPoolableActive = true;
+                poolable.OnSpawnFromPool();
 
                 return true;
             }
@@ -79,6 +80,7 @@ namespace PoolTools
             if (poolable.IsPoolableActive)
             {
                 poolable.OnRecycleToPool();
+
                 if (ManagePoolablesActivation)
                 {
                     poolable.gameObject.SetActive(false);
@@ -107,29 +109,27 @@ namespace PoolTools
                     {
                         DestroyPoolable(i);
                     }
+
+                    for (int i = _availableIndexesCount - 1; i >= 0; i--)
+                    {
+                        if(_availableIndexes[i] >= newSize)
+                        {
+                            _availableIndexesCount--;
+                            _availableIndexes[i] = _availableIndexes[_availableIndexesCount];
+                            _availableIndexes[_availableIndexesCount] = -1;
+                        }
+                    }
                 }
 
                 System.Array.Resize(ref _pool, newSize);
-                _availableIndexes = new int[newSize];
+                System.Array.Resize(ref _availableIndexes, newSize);
 
-                // Create new instances
+                // Create new instances & available indexes
                 if (newSize > lengthBefore)
                 {
                     for (int i = lengthBefore; i < newSize; i++)
                     {
                         CreateNewPoolableInstance(i);
-                    }
-                }
-
-                // TODO: no need to recompute if we're growing
-                // Recompute available indexes
-                int addedCounter = 0;
-                for (int i = 0; i < _pool.Length; i++)
-                {
-                    if(!_pool[i].IsPoolableActive)
-                    {
-                        _availableIndexes[addedCounter] = _pool[i].IndexInPool;
-                        addedCounter++;
                     }
                 }
             }
@@ -148,7 +148,6 @@ namespace PoolTools
 
         private void DestroyPoolable(int atIndex)
         {
-            RecyclePoolable(atIndex);
             GameObject.Destroy(_pool[atIndex].gameObject);
         }
     }
